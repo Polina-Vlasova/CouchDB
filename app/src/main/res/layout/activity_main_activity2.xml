@@ -1,0 +1,126 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="vlasova.school.by.couchdb.MainActivity2"
+    android:gravity="center"
+    android:padding="30dp">
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/scrollView"
+        android:layout_above="@+id/submit"
+        android:gravity="center"
+        android:layout_alignParentTop="true"
+        android:fillViewport="false">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/ll">
+
+            <TableLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:gravity="center"
+                android:id="@+id/tl">
+
+                <TableRow
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <EditText
+                        android:layout_width="120dp"
+                        android:layout_height="40dp"
+                        android:textAppearance="?android:attr/textAppearanceLarge"
+                        android:text="ID"
+                        android:id="@+id/key1"
+                        android:background="@drawable/back"
+                        android:layout_marginRight="10dp"
+                        android:layout_marginBottom="5dp"
+                        android:layout_marginTop="5dp"
+                        android:gravity="fill_vertical"
+                        android:paddingLeft="10dp"
+                        android:singleLine="true"
+                        android:editable="false" />
+
+                    <EditText
+                        android:layout_width="120dp"
+                        android:layout_height="40dp"
+                        android:id="@+id/value1"
+                        android:hint="Value1:"
+                        android:background="@drawable/back"
+                        android:layout_marginBottom="5dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="5dp"
+                        android:gravity="fill_vertical"
+                        android:paddingLeft="10dp"
+                        android:singleLine="true" />
+
+                </TableRow>
+
+                <TableRow
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:gravity="center">
+
+                    <EditText
+                        android:layout_width="120dp"
+                        android:layout_height="40dp"
+                        android:textAppearance="?android:attr/textAppearanceLarge"
+                        android:text="rev"
+                        android:id="@+id/key2"
+                        android:background="@drawable/back"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:layout_marginRight="10dp"
+                        android:gravity="fill_vertical"
+                        android:paddingLeft="10dp" />
+
+                    <EditText
+                        android:layout_width="120dp"
+                        android:layout_height="40dp"
+                        android:id="@+id/value2"
+                        android:hint="Value2:"
+                        android:background="@drawable/back"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginBottom="5dp"
+                        android:layout_marginTop="5dp"
+                        android:gravity="fill_vertical"
+                        android:paddingLeft="10dp"
+                        android:singleLine="true" />
+                </TableRow>
+
+            </TableLayout>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView"
+                android:layout_gravity="top|center_horizontal" />
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:text="Submit"
+        android:id="@+id/submit"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:text="Cancel"
+        android:id="@+id/cancel"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignTop="@+id/submit" />
+
+</RelativeLayout>
