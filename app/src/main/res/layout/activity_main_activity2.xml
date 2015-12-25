@@ -3,7 +3,8 @@
     android:layout_height="match_parent"
     tools:context="vlasova.school.by.couchdb.MainActivity2"
     android:gravity="center"
-    android:padding="30dp">
+    android:padding="30dp"
+    android:background="@drawable/backgr2">
 
     <ScrollView
         android:layout_width="fill_parent"
@@ -91,16 +92,12 @@
                         android:layout_marginTop="5dp"
                         android:gravity="fill_vertical"
                         android:paddingLeft="10dp"
-                        android:singleLine="true" />
+                        android:singleLine="true"
+                        android:editable="true" />
                 </TableRow>
 
             </TableLayout>
 
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/imageView"
-                android:layout_gravity="top|center_horizontal" />
         </LinearLayout>
     </ScrollView>
 
@@ -111,7 +108,10 @@
         android:id="@+id/submit"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:background="@drawable/backgr_but"
+        android:textColor="#ffffffff"
+        android:textSize="20dp" />
 
     <Button
         android:layout_width="120dp"
@@ -121,6 +121,20 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
-        android:layout_alignTop="@+id/submit" />
+        android:layout_alignTop="@+id/submit"
+        android:background="@drawable/backgr_but"
+        android:textColor="#ffffffff"
+        android:textSize="20dp" />
+
+    <ProgressBar
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:indeterminateDrawable="@drawable/spinner_ring"
+        android:indeterminateOnly="true"
+        android:visibility="invisible"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:indeterminate="false"
+        android:id="@+id/progressBar" />
 
 </RelativeLayout>

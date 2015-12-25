@@ -1,13 +1,14 @@
 package vlasova.school.by.couchdb;
 
-import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.provider.DocumentsContract;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -17,16 +18,16 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -36,41 +37,17 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.w3c.dom.Document;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity2 extends ActionBarActivity {
 
+    ProgressBar progressBar;
     EditText value1;
     EditText value2;
     String type;
@@ -78,19 +55,21 @@ public class MainActivity2 extends ActionBarActivity {
     TableLayout tl;
     ArrayList<String> keys;
     ArrayList<String> values;
-    ImageView image;
-
+    ArrayList<ImageView> images;
+    ImageView imageView;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_activity2);
-
+        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
         value1 = (EditText)findViewById(R.id.value1);
         value2 = (EditText)findViewById(R.id.value2);
         tl = (TableLayout)findViewById(R.id.tl);
         keys = new ArrayList<String>();
         values = new ArrayList<String>();
-        image = (ImageView)findViewById(R.id.imageView);
+        images = new ArrayList<>();
         type = MainActivity2.this.getIntent().getStringExtra("type");
         if(type.equals("get")) {
             keys = MainActivity2.this.getIntent().getStringArrayListExtra("keys");
@@ -121,7 +100,7 @@ public class MainActivity2 extends ActionBarActivity {
         }
         n++;
         newKey(n - 1, "new");
-
+        final LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
         int index = keys.indexOf("_attachments");
         if(index != -1) {
             String att = values.get(index);
@@ -131,18 +110,23 @@ public class MainActivity2 extends ActionBarActivity {
                     RequestQueue queue = Volley.newRequestQueue(MainActivity2.this);
                     String url = "http://46.101.205.23:4444/test_db/" + values.get(0) + "/" + title;
                     final int finalI = i;
+                    final int finalI1 = i;
                     ImageRequest iq = new ImageRequest(url,
                             new Response.Listener<Bitmap>() {
                                 @Override
                                 public void onResponse(Bitmap bitmap) {
-                                    if(finalI == 0) {
-                                        image.setImageBitmap(bitmap);
-                                    } else {
-                                        LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
-                                        ImageView iv = new ImageView(MainActivity2.this);
-                                        iv.setImageBitmap(bitmap);
-                                        ll.addView(iv);
-                                    }
+                                    ImageView iv = new ImageView(MainActivity2.this);
+                                    iv.setImageBitmap(bitmap);
+                                    ll.addView(iv);
+                                    images.add(iv);
+                                    iv.setOnLongClickListener(new View.OnLongClickListener() {
+                                        @Override
+                                        public boolean onLongClick(View v) {
+                                            showD(finalI1);
+                                            return true;
+                                        }
+                                    });
+
                                 }
                             }, 0, 0, null,
                             new Response.ErrorListener() {
@@ -156,41 +140,65 @@ public class MainActivity2 extends ActionBarActivity {
                 e.printStackTrace();
             }
         } else {
-            image.setImageResource(R.drawable.default_img);
+            imageView = new ImageView(MainActivity2.this);
+            imageView.setImageResource(R.drawable.default_img);
+            ll.addView(imageView);
+            imageView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    showD(-1);
+                    return true;
+                }
+            });
         }
+        progressBar.setVisibility(View.INVISIBLE);
 
         findViewById(R.id.submit).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                progressBar.setVisibility(ProgressBar.VISIBLE);
                 final String url = "http://46.101.205.23:4444/test_db/";
-                JSONObject j = new JSONObject();
+                final RequestQueue queue = Volley.newRequestQueue(MainActivity2.this);
+                final JSONObject j = new JSONObject();
                 try {
                     if(!value1.getText().toString().equals(""))
                         j.put("_id", value1.getText());
                     if(type.equals("get"))
                         j.put("_rev", value2.getText());
-                    for(int i = 2; i < n; i++)
-                        if(!keys.get(i).equals(""))
+                    for(int i = 2; i < n; i++) {
+                        if(keys.get(i).equals("_attachments"))
+                            continue;
+                        else if (!keys.get(i).equals(""))
                             j.put(keys.get(i), values.get(i));
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                RequestQueue queue = Volley.newRequestQueue(MainActivity2.this);
-                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(com.android.volley.Request.Method.POST, url, j,
+                final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(com.android.volley.Request.Method.POST, url, j,
                         new Response.Listener<JSONObject>() {
                             @Override
-                            public void onResponse(JSONObject jsonObject) {
-                                Toast.makeText(getApplicationContext(),  jsonObject.toString(), Toast.LENGTH_SHORT).show();
+                            public void onResponse(final JSONObject jsonObject) {
+                                if(images.size() == 0) {
+                                    progressBar.setVisibility(ProgressBar.INVISIBLE);
+                                    MainActivity2.this.startActivity(new Intent(MainActivity2.this, MainActivity.class));
+                                    Toast.makeText(getApplicationContext(), jsonObject.toString(), Toast.LENGTH_LONG).show();
+                                } else {
+                                    try {
+                                        putImage(0, jsonObject.getString("rev"));
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
                             }
                         }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(), error.getMessage() + " /er", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
+
                     }
                 });
                 queue.add(jsonObjectRequest);
-                MainActivity2.this.startActivity(new Intent(MainActivity2.this, MainActivity.class));
             }
         });
         findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
@@ -199,35 +207,120 @@ public class MainActivity2 extends ActionBarActivity {
                 MainActivity2.this.startActivity(new Intent(MainActivity2.this, MainActivity.class));
             }
         });
-        image.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/*");
-                startActivityForResult(intent, 0);
-            }
-        });
     }
 
-    @Override
-    protected void onActivityResult(int reqCode, int resCode, Intent data) {
-        if(resCode == Activity.RESULT_OK && data != null){
-            String realPath = RealPathUtil.getRealPathFromURI(this, data.getData());
-            setTextViews(realPath);
-        }
-
-    }
-
-    private void setTextViews(String realPath){
-
-        Uri uriFromPath = Uri.fromFile(new File(realPath));
-        Bitmap bitmap = null;
+    public void putImage(int i, String rev){
+        final String url = "http://46.101.205.23:4444/test_db/";
+        String url2 = url + values.get(0) + "/picture" + (i + 1) + ".png?rev=" + rev;
+        Bitmap bmp = ((BitmapDrawable)images.get(i).getDrawable()).getBitmap();
+        final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        final byte[] photoBytes = stream.toByteArray();
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         try {
-            bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(uriFromPath));
-        } catch (FileNotFoundException e) {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        image.setImageBitmap(bitmap);
+        final int finalI = i;
+        StringRequest stringRequest = new StringRequest(Request.Method.PUT, url2,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        if(images.size() == finalI + 1) {
+                            Toast.makeText(getApplicationContext(), response, Toast.LENGTH_LONG).show();
+                            progressBar.setVisibility(ProgressBar.INVISIBLE);
+                            MainActivity2.this.startActivity(new Intent(MainActivity2.this, MainActivity.class));
+                        } else
+                            try {
+                                putImage(finalI + 1, new JSONObject(response).getString("rev"));
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        if(images.size() == finalI + 1) {
+                            Toast.makeText(getApplicationContext(), "Error: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                            progressBar.setVisibility(ProgressBar.INVISIBLE);
+                            MainActivity2.this.startActivity(new Intent(MainActivity2.this, MainActivity.class));
+                        }
+                    }
+                })
+        {
+            @Override
+            public byte[] getBody() throws AuthFailureError {
+                return photoBytes;
+            }
+        };
+        queue.add(stringRequest);
+
+    }
+
+
+    public void showD(final int id) {
+        final String[] task;
+        if(id != -1)
+            task = new String[]{"Изменить", "Удалить"};
+        else
+            task = new String[]{"Изменить"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Выберите действие");
+        builder.setItems(task, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                if(item == 0) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.setType("image/*");
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        startActivityForResult(intent, id);
+                    }
+                } else {
+                    LinearLayout ll = (LinearLayout)findViewById(R.id.ll);
+                    ll.removeView(images.get(id));
+                    images.remove(id);
+                    if(images.size() == 0){
+                        imageView = new ImageView(MainActivity2.this);
+                        imageView.setImageResource(R.drawable.default_img);
+                        ll.addView(imageView);
+                        imageView.setOnLongClickListener(new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View v) {
+                                showD(-1);
+                                return true;
+                            }
+                        });
+                    }
+                }
+            }
+        });
+        builder.setCancelable(false);
+        AlertDialog alert =  builder.create();
+        alert.show();
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("WTF", requestCode + "/" + resultCode);
+        progressBar.setVisibility(View.INVISIBLE);
+        if (resultCode == RESULT_OK) {
+            Uri uri = data.getData();
+            Bitmap bitmap = null;
+            try {
+                bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(uri));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            if(images.size() != 0) {
+                images.get(requestCode).setImageBitmap(bitmap);
+            } else {
+                imageView.setImageBitmap(bitmap);
+                images.add(imageView);
+            }
+        }
+
     }
     public void newKey(final int i, String type){
         final TableRow tr = new TableRow(this);
@@ -319,28 +412,6 @@ public class MainActivity2 extends ActionBarActivity {
                 }
             }
 
-            });
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main_activity2, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+        });
     }
 }
